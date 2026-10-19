@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+.env
+envs/*.env
+!envs/*.env.example
+staticfiles/
+media/
+*.sqlite3
+.idea/
+.vscode/
