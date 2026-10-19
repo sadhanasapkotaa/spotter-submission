@@ -3,11 +3,11 @@
 | Tool    | Version                                                  |
 |---------|----------------------------------------------------------|
 | Python  | 3.12 (pinned in .python-version)                         |
-| uv      | ...                                                      |
-| Docker  | ...                                                      |
+| uv      | 0.13.1 |
+| Docker  | 29.6.1 |
 | Django  | 6.1.2 (target)                                           |
 | PostGIS | 3.5 on Postgres 17 (image tag, see compose files later)  |
-]633;E;echo;2a0b89be-3f98-4809-868a-7dda67002ef2]633;C
+
 ## Resolved dependency versions
 
 ```

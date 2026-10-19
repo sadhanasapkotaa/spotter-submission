@@ -27,3 +27,22 @@ dev = [
     "ruff>=0.17.1",
     "shapely>=2.2.0",
 ]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+addopts = "-ra --strict-markers -p no:cacheprovider"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "DJ", "S", "C4"]
+ignore = ["S101", "E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"config/settings/*.py" = ["F403", "F405", "E402"]
+"tests/**" = ["S"]
+"scripts/**" = ["S", "E402"]
