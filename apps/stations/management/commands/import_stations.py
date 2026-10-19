@@ -29,7 +29,7 @@ class Command(BaseCommand):
     help = "Import the OPIS fuel price file: normalise, de-duplicate, upsert. Safe to re-run."
 
     def add_arguments(self, parser):
-        parser.add_argument("path", nargs="?", default=str(settings.DATA_DIR / "fuel-prices.tsv"))
+        parser.add_argument("path", nargs="?", default=str(settings.DATA_DIR / "fuel-prices.csv"))
         parser.add_argument("--dry-run", action="store_true", help="Do everything, then roll back")
         parser.add_argument("--report-dir", default=str(settings.DATA_DIR / "reports"))
 
