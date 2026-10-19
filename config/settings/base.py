@@ -27,7 +27,7 @@ DJANGO_APPS = [
     "django.contrib.gis",
 ]
 THIRD_PARTY_APPS: list[str] = []
-LOCAL_APPS = ["apps.core", "apps.geo"]
+LOCAL_APPS = ["apps.core", "apps.geo", "apps.stations"]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
