@@ -1,0 +1,40 @@
+# Prod reference: hardened web container, migrations as an explicit release step.
+# Real deployments should use a managed PostGIS database (change DATABASE_URL, drop `db`).
+services:
+  web:
+    image: ${IMAGE:-spotter-backend:prod}
+    container_name: spotter-prod-web
+    env_file: envs/prod.env
+    environment:
+      RUN_MIGRATIONS: "false"
+    ports:
+      - "8003:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /dev/shm
+    security_opt:
+      - no-new-privileges:true
+
+  db:
+    image: postgres:17-alpine
+    container_name: spotter-prod-db
+    env_file: envs/prod.env
+    restart: unless-stopped
+    volumes:
+      - spotter_prod_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  spotter_prod_pgdata:
