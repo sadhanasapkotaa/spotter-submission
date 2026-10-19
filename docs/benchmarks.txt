@@ -1,0 +1,24 @@
+python 3.12.3 on x86_64, Linux
+
+== CORRECTNESS ==
+oracle check (300 tiny trips): brute force vs grid DP mismatches = 0
+
+3000 random trips (12 stations, range 30) vs the grid-DP optimum:
+method                      optimal   worse  avg overpay  worst overpay
+window DP (production)         3000       0            -              -
+greedy next-cheaper            3000       0            -              -
+state graph (Dijkstra)         3000       0            -              -
+naive station graph             645    2355        49.8%        1400.0%
+
+== SPEED, ALL METHODS (150 stations, 1500 mile route, range 500) ==
+method                             ms     cost $
+window DP (production)            0.3     292.72
+greedy next-cheaper               0.1     292.72
+state graph (Dijkstra)          280.6     292.72
+naive station graph               4.9     301.03
+
+== SPEED (20,000 stations, 2,800 mile route) ==
+case                            window ms  greedy ms
+random prices                       105.5       35.1
+prices rising along route           152.4    26671.8
+prices falling along route           74.3       43.8
