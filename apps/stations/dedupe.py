@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import re
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 
@@ -111,6 +112,30 @@ class Reject:
     raw: str
 
 
+@dataclass(frozen=True)
+class Cluster:
+    station_key: str
+    keys: tuple[str, ...]
+    name: str
+    address: str
+    city: str
+    state: str
+    price: Decimal
+    opis_id: int | None
+    opis_ids: tuple[int, ...]
+    rack_id: int | None
+    n_rows: int
+    price_conflict: bool
+
+    @property
+    def alias_hashes(self) -> tuple[str, ...]:
+        return tuple(hash_key(k) for k in self.keys)
+
+    @property
+    def address_n(self) -> str:
+        return norm(self.address)
+
+
 def _to_int(value) -> int | None:
     try:
         return int(float(str(value).strip()))
@@ -160,3 +185,98 @@ def parse_rows(records) -> tuple[list[Row], list[Reject]]:
             )
         )
     return rows, rejects
+
+
+def _mode(values) -> str:
+    counts = Counter(values)
+    return sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[0][0]
+
+
+def _make_cluster(rows: list[Row]) -> Cluster:
+    keys = sorted({k for r in rows for k in (r.key_a, r.key_b) if k})
+    canonical = min(r.key_a for r in rows)
+    prices = [r.price for r in rows]
+    mean = (sum(prices, Decimal(0)) / len(prices)).quantize(PRICE_QUANT, ROUND_HALF_UP)
+    opis_ids = tuple(sorted({r.opis_id for r in rows if r.opis_id is not None}))
+    racks = [r.rack_id for r in rows if r.rack_id is not None]
+    return Cluster(
+        station_key=hash_key(canonical),
+        keys=tuple(keys),
+        name=max((r.name for r in rows), key=lambda n: (len(n), n)),
+        address=_mode(r.address for r in rows),
+        city=_mode(r.city for r in rows),
+        state=rows[0].state,
+        price=mean,
+        opis_id=opis_ids[0] if opis_ids else None,
+        opis_ids=opis_ids,
+        rack_id=min(racks) if racks else None,
+        n_rows=len(rows),
+        price_conflict=len(set(prices)) > 1,
+    )
+
+
+def build_clusters(rows: list[Row]) -> list[Cluster]:
+    """Union-find over Rule A and Rule B keys; each connected group is one station."""
+    parent = list(range(len(rows)))
+
+    def find(i: int) -> int:
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    first_seen: dict[str, int] = {}
+    for i, row in enumerate(rows):
+        for key in (row.key_a, row.key_b):
+            if key is None:
+                continue
+            if key in first_seen:
+                a, b = find(i), find(first_seen[key])
+                if a != b:
+                    parent[max(a, b)] = min(a, b)
+            else:
+                first_seen[key] = i
+
+    groups: dict[int, list[Row]] = defaultdict(list)
+    for i, row in enumerate(rows):
+        groups[find(i)].append(row)
+    return sorted((_make_cluster(g) for g in groups.values()), key=lambda c: c.station_key)
+
+
+def review_flags(clusters: list[Cluster]) -> list[dict]:
+    """Cases worth a human look. These are flagged only, never merged automatically."""
+    flags: list[dict] = []
+    by_key = {c.station_key: c for c in clusters}
+
+    def describe(keys) -> str:
+        return "; ".join(
+            f"{by_key[k].name} @ {by_key[k].address}, {by_key[k].city} {by_key[k].state}"
+            for k in sorted(keys)
+        )
+
+    by_opis: dict[int, set[str]] = defaultdict(set)
+    by_group: dict[tuple, set[str]] = defaultdict(set)
+    for c in clusters:
+        for oid in c.opis_ids:
+            by_opis[oid].add(c.station_key)
+        for k in c.keys:
+            if k.startswith("A|"):
+                by_group[tuple(k.split("|")[1:5])].add(c.station_key)
+
+    for oid, keys in sorted(by_opis.items()):
+        if len(keys) > 1:
+            flags.append(
+                {
+                    "reason": f"OPIS id {oid} used by {len(keys)} different stations",
+                    "detail": describe(keys),
+                }
+            )
+    for _group, keys in sorted(by_group.items()):
+        if len(keys) > 1:
+            flags.append(
+                {
+                    "reason": "same address + brand but different/missing store number",
+                    "detail": describe(keys),
+                }
+            )
+    return flags
