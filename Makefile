@@ -74,3 +74,6 @@ geocode: env  ## Geocode stations (Census batch, then city centroid). ARGS="--sk
 	$(MANAGE) geocode_stations $(ARGS)
 
 data: load-usa load-places import-stations geocode  ## Full data pipeline
+
+compare-trip: env  ## Compare every planner on one real trip. ARGS='"A, ST" "B, ST" --save'
+	$(MANAGE) compare_trip $(ARGS)

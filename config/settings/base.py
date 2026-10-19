@@ -26,8 +26,8 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
 ]
-THIRD_PARTY_APPS: list[str] = []
-LOCAL_APPS = ["apps.core", "apps.geo", "apps.stations"]
+THIRD_PARTY_APPS = ["rest_framework"]
+LOCAL_APPS = ["apps.core", "apps.geo", "apps.stations", "apps.routing"]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -66,6 +66,30 @@ DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DJANGO_CONN_MAX_AGE", default=60)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "UNAUTHENTICATED_USER": None,
+}
+
+# Routing. OSRM's public demo server needs no key; set ORS_API_KEY to use OpenRouteService.
+ORS_API_KEY = env("ORS_API_KEY", default="")
+ROUTING_PROVIDER = env("ROUTING_PROVIDER", default="ors" if ORS_API_KEY else "osrm")
+ORS_BASE_URL = env("ORS_BASE_URL", default="https://api.openrouteservice.org")
+ORS_PROFILE = env("ORS_PROFILE", default="driving-car")
+OSRM_BASE_URL = env("OSRM_BASE_URL", default="https://router.project-osrm.org")
+ROUTING_TIMEOUT_S = env.float("ROUTING_TIMEOUT_S", default=20.0)
+ROUTING_CACHE_TTL = env.int("ROUTING_CACHE_TTL", default=60 * 60 * 24)
+ROUTING_CORRIDOR_MI = env.float("ROUTING_CORRIDOR_MI", default=3.0)  # exactly geocoded stations
+ROUTING_CENTROID_CORRIDOR_MI = env.float(
+    "ROUTING_CENTROID_CORRIDOR_MI", default=5.0
+)  # city-centroid stations
+VEHICLE_RANGE_MI = env.float("VEHICLE_RANGE_MI", default=500.0)
+VEHICLE_MPG = env.float("VEHICLE_MPG", default=10.0)
+
+# Per-process cache (route geometries). Use Redis/Memcached to share across gunicorn workers.
+CACHES = {"default": {"BACKEND": "django.core.cache.backends.locmem.LocMemCache"}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

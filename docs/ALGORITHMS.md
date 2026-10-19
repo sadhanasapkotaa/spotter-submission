@@ -33,3 +33,18 @@ selection and projection run in numpy over an in-memory snapshot (~8k stations, 
 Starts with a full tank (not charged); stations within 3 mi (geocoded) / 5 mi (city centroid) of the
 road are used; each stop off the road pays 2 x offset miles of extra fuel; capacity is reduced by that
 reserve so a detour never strands the vehicle. Route distance is the sum of the geometry's segments.
+
+## Real-trip results (make compare-trip; reports in docs/trip_report*.md)
+New York to Chicago, 802.8 mi, 153 corridor stations, one stop. Window DP and greedy cost $95.67,
+the grid-DP oracle and the state graph agree on the 1-mile grid ($95.75, the difference is
+rounding), and the naive station graph costs $10.37 more because it pays for miles the free
+starting fuel already covers. Window DP takes 0.2 ms, the state graph about 125 ms.
+
+The API total is higher than the planner cost because of two deliberate choices:
+* Detour fuel: a stop `d` miles off the road costs 2d extra miles of fuel, bought at that stop.
+* Safety reserve: the planner assumes a 5-mile detour margin, so the tank is 490 miles and the
+  start fuel is capped at 490, not 500. This costs about 1 gallon (about $3) on a trip that needs
+  a stop. The plan is therefore the optimum under that reserve, not the absolute minimum, and the
+  reserve is reported in the response under `assumptions.detour_reserve_miles`.
+
+Sample responses are in `docs/samples/`.
