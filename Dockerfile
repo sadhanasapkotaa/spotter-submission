@@ -33,6 +33,10 @@ FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime-base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PATH="/app/.venv/bin:$PATH"
+# GeoDjango needs the GDAL / GEOS / PROJ shared libraries.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends libgdal32 libgeos-c1v5 libproj25 \
+ && rm -rf /var/lib/apt/lists/*
 RUN groupadd --system --gid 999 django \
  && useradd --system --gid 999 --uid 999 --create-home django
 WORKDIR /app
@@ -59,7 +63,7 @@ COPY --chown=django:django . /app
 # Collect static at build time. Dummy values only; real ones come from the runtime env.
 RUN DJANGO_SETTINGS_MODULE=config.settings.prod \
     DJANGO_SECRET_KEY=build-only \
-    DATABASE_URL=sqlite:////tmp/build.sqlite3 \
+    DATABASE_URL=postgis://x:x@localhost:5432/x \
     python manage.py collectstatic --noinput
 
 USER django
