@@ -57,13 +57,13 @@ RUN chmod +x /entrypoint.sh
 COPY --chown=django:django . /app
 
 # Collect static at build time. Dummy values only; real ones come from the runtime env.
-RUN DJANGO_SETTINGS_MODULE=config.settings.local \
+RUN DJANGO_SETTINGS_MODULE=config.settings.prod \
     DJANGO_SECRET_KEY=build-only \
     DATABASE_URL=sqlite:////tmp/build.sqlite3 \
     python manage.py collectstatic --noinput
 
 USER django
-ENV DJANGO_SETTINGS_MODULE=config.settings.local \
+ENV DJANGO_SETTINGS_MODULE=config.settings.prod \
     WEB_CONCURRENCY=3
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
