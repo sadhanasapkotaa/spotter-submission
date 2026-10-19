@@ -9,12 +9,14 @@ from apps.routing.planner import (
     InvalidProblem,
     PlanInvalid,
     Purchase,
+    first_uncovered_mile,
     make_problem,
     plan_greedy,
+    plan_window,
     validate_plan,
 )
 
-ALGOS = [plan_greedy]
+ALGOS = [plan_window, plan_greedy]
 
 
 def prob(stations, distance, **kw):
@@ -55,11 +57,38 @@ def test_tops_up_at_a_cheap_station_only_for_miles_nothing_else_can_serve(algo):
     assert plan.cost == pytest.approx(50 / 10 * 2.0 + 350 / 10 * 5.0)
 
 
+def test_equal_prices_choose_the_later_station():
+    plan = plan_window(prob([(100, 3.0), (400, 3.0)], 800))
+    assert [p.index for p in plan.purchases] == [1]
+
+
+def test_stations_at_or_past_the_destination_are_ignored():
+    p = prob([(800, 1.0), (900, 1.0), (300, 3.0)], 800)
+    assert p.n == 1 and p.dropped == 2
+    assert plan_window(p).cost == pytest.approx(90.0)
+
+
+def test_starting_empty_needs_a_station_at_mile_zero():
+    assert first_uncovered_mile(prob([(5, 3.0)], 100, start_mi=0)) == 0
+    assert plan_window(prob([(0, 3.0)], 100, start_mi=0)).cost == pytest.approx(30.0)
+
+
 @pytest.mark.parametrize("algo", ALGOS)
 def test_gap_longer_than_range_is_infeasible_and_names_the_mile(algo):
     with pytest.raises(Infeasible) as err:
         algo(prob([(100, 3.0), (700, 3.0)], 1000))
     assert err.value.at_mile == pytest.approx(600)
+
+
+def test_first_station_beyond_starting_fuel_is_infeasible():
+    with pytest.raises(Infeasible) as err:
+        plan_window(prob([(300, 3.0)], 1000, start_mi=200))
+    assert err.value.at_mile == pytest.approx(200)
+
+
+def test_last_stretch_longer_than_range_is_infeasible():
+    with pytest.raises(Infeasible):
+        plan_window(prob([(100, 3.0)], 700))  # 600 miles left after the only station
 
 
 @pytest.mark.parametrize("algo", ALGOS)

@@ -13,11 +13,12 @@ from .contract import (
     validate_plan,
 )
 from .greedy import plan_greedy
+from .window import plan_window
 
-ALGORITHMS = {"greedy": plan_greedy}
+ALGORITHMS = {"window": plan_window, "greedy": plan_greedy}
 
 
-def plan_fuel(problem: Problem, algorithm: str = "greedy") -> Plan:
+def plan_fuel(problem: Problem, algorithm: str = "window") -> Plan:
     return ALGORITHMS[algorithm](problem)
 
 
@@ -34,5 +35,6 @@ __all__ = [
     "make_problem",
     "plan_fuel",
     "plan_greedy",
+    "plan_window",
     "validate_plan",
 ]
