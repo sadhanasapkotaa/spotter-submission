@@ -10,7 +10,7 @@ COMPOSE = docker compose -p spotter-$(ENV) -f compose.yaml -f compose.$(ENV).yam
 RUN_AS = $(if $(filter local,$(ENV)),--user $$(id -u):$$(id -g),)
 MANAGE = $(COMPOSE) run --rm $(RUN_AS) web python manage.py
 
-.PHONY: help env build up down destroy logs shell psql migrate makemigrations superuser test lint format lock
+.PHONY: help env build up down destroy logs shell psql migrate makemigrations superuser test lint format lock load-usa
 
 help:  ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -59,3 +59,6 @@ format:  ## Auto-fix and format (host)
 
 lock:  ## Update uv.lock
 	uv lock --upgrade
+
+load-usa: env  ## Download + load the USA boundary
+	$(MANAGE) load_usa --download
