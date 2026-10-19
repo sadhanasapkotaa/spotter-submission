@@ -10,7 +10,8 @@ COMPOSE = docker compose -p spotter-$(ENV) -f compose.yaml -f compose.$(ENV).yam
 RUN_AS = $(if $(filter local,$(ENV)),--user $$(id -u):$$(id -g),)
 MANAGE = $(COMPOSE) run --rm $(RUN_AS) web python manage.py
 
-.PHONY: help env build up down destroy logs shell psql migrate makemigrations superuser test lint format lock load-usa load-places import-stations geocode
+.PHONY: help env build up down destroy logs shell psql migrate makemigrations superuser \
+	    test lint format lock load-usa load-places import-stations geocode data
 
 help:  ## Show targets
 	@grep -E '^[a-zA-Z_-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-18s %s\n", $$1, $$2}'
@@ -71,3 +72,5 @@ import-stations: env  ## Import + dedupe fuel prices. ARGS="--dry-run" to previe
 
 geocode: env  ## Geocode stations (Census batch, then city centroid). ARGS="--skip-census"
 	$(MANAGE) geocode_stations $(ARGS)
+
+data: load-usa load-places import-stations geocode  ## Full data pipeline
