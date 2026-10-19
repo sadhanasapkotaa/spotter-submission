@@ -24,6 +24,7 @@ DJANGO_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.gis",
 ]
 THIRD_PARTY_APPS: list[str] = []
 LOCAL_APPS = ["apps.core"]
@@ -61,6 +62,7 @@ TEMPLATES = [
 
 # Database: DATABASE_URL=postgis://user:pass@host:5432/dbname
 DATABASES = {"default": env.db("DATABASE_URL")}
+DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DJANGO_CONN_MAX_AGE", default=60)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"

@@ -48,8 +48,8 @@ makemigrations: env  ## Create migrations (local)
 superuser: env  ## Create a superuser
 	$(MANAGE) createsuperuser
 
-test:  ## Run tests on the host (uv)
-	uv run pytest $(ARGS)
+test: env  ## Run tests in the local container (needs PostGIS)
+	$(COMPOSE) run --rm -e DJANGO_SETTINGS_MODULE=config.settings.test web pytest $(ARGS)
 
 lint:  ## Lint + format check (host)
 	uv run ruff check . && uv run ruff format --check .

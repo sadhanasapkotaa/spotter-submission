@@ -1,9 +1,12 @@
-"""Used by pytest / CI."""
+"""Used by pytest / CI. Needs PostGIS (run `make test`, or point DATABASE_URL at one)."""
 
 import os
 
 os.environ.setdefault("DJANGO_SECRET_KEY", "test-key")
-os.environ.setdefault("DATABASE_URL", "sqlite:///test.sqlite3")
+os.environ.setdefault(
+    "DATABASE_URL",
+    "postgis://spotter_local:spotter_local_pw@localhost:5432/spotter_local_db",
+)
 
 from .base import *
 
