@@ -12,3 +12,4 @@ media/
 *.sqlite3
 .idea/
 .vscode/
+data/reports/
