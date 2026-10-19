@@ -26,8 +26,8 @@ DJANGO_APPS = [
     "django.contrib.staticfiles",
     "django.contrib.gis",
 ]
-THIRD_PARTY_APPS: list[str] = []
-LOCAL_APPS = ["apps.core", "apps.geo", "apps.stations"]
+THIRD_PARTY_APPS = ["rest_framework"]
+LOCAL_APPS = ["apps.core", "apps.geo", "apps.stations", "apps.routing"]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
 MIDDLEWARE = [
@@ -66,6 +66,12 @@ DATABASES["default"]["ENGINE"] = "django.contrib.gis.db.backends.postgis"
 DATABASES["default"]["ATOMIC_REQUESTS"] = True
 DATABASES["default"]["CONN_MAX_AGE"] = env.int("DJANGO_CONN_MAX_AGE", default=60)
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
+    "DEFAULT_PARSER_CLASSES": ["rest_framework.parsers.JSONParser"],
+    "UNAUTHENTICATED_USER": None,
+}
 
 # Routing. OSRM's public demo server needs no key; set ORS_API_KEY to use OpenRouteService.
 ORS_API_KEY = env("ORS_API_KEY", default="")
