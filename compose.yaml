@@ -1,0 +1,8 @@
+# Base definition shared by every environment.
+# Never run directly; combine with an override: see Makefile (`make up ENV=local`).
+services:
+  web:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped

@@ -1,0 +1,30 @@
+# Staging mirrors prod. Uses a PostGIS container here; point DATABASE_URL at a managed
+# PostGIS instance (and drop the db service) for a real staging environment.
+services:
+  web:
+    image: ${IMAGE:-spotter-backend:staging}
+    container_name: spotter-staging-web
+    env_file: envs/staging.env
+    environment:
+      RUN_MIGRATIONS: "true"
+    ports:
+      - "8002:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgis/postgis:17-3.5-alpine
+    container_name: spotter-staging-db
+    env_file: envs/staging.env
+    restart: unless-stopped
+    volumes:
+      - spotter_staging_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  spotter_staging_pgdata:
