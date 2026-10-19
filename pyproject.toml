@@ -1,17 +1,29 @@
 [project]
-name = "spotter-submission"
+name = "spotter-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Django API that plans the cheapest fuel stops for a US road trip"
 readme = "README.md"
-authors = [
-    { name = "sadhanasapkotaa", email = "mandeyra7@gmail.com" }
-]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "django==6.1.2",
+    "django-environ>=0.14.0",
+    "djangorestframework>=3.18.3",
+    "gunicorn>=26.2.0",
+    "httpx>=0.28.1",
+    "numpy>=2.5.4",
+    "psycopg[binary]>=3.3.6",
+    "scipy>=1.18.1",
+    "whitenoise>=6.12.0",
+]
 
-[project.scripts]
-spotter-submission = "spotter_submission:main"
+[tool.uv]
+package = false
 
-[build-system]
-requires = ["uv_build>=0.13.1,<0.14.0"]
-build-backend = "uv_build"
+[dependency-groups]
+dev = [
+    "hypothesis>=6.170.2",
+    "pytest>=9.1.1",
+    "pytest-django>=4.14.0",
+    "ruff>=0.17.1",
+    "shapely>=2.2.0",
+]
