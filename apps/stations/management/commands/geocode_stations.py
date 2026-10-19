@@ -12,7 +12,7 @@ from apps.geo.models import Country
 from apps.geo.services import haversine_miles, in_usa
 from apps.stations.dedupe import norm
 from apps.stations.models import Place, Station
-from apps.stations.places import city_variants
+from apps.stations.places import PlaceIndex
 
 CENSUS_URL = "https://geocoding.geo.census.gov/geocoder/locations/addressbatch"
 MAX_CENSUS_DISTANCE_MI = 50  # reject a street match this far from the station's city centroid
@@ -54,19 +54,15 @@ class Command(BaseCommand):
         usa_ready = Country.objects.filter(iso_a3="USA").exists()
         if not usa_ready:
             self.stdout.write(self.style.WARNING("USA boundary not loaded: skipping USA check."))
-        centroids = {
-            (name, state): (pt.y, pt.x)
+        centroids = PlaceIndex(
+            (name, state, (pt.y, pt.x))
             for name, state, pt in Place.objects.values_list("name", "state", "location")
-        }
-        if not centroids:
+        )
+        if not len(centroids):
             self.stdout.write(self.style.WARNING("No Place rows: run load_places first."))
 
         def centroid_for(s: Station):
-            for variant in city_variants(norm(s.city)):
-                hit = centroids.get((variant, s.state))
-                if hit:
-                    return hit
-            return None
+            return centroids.find(norm(s.city), s.state)
 
         now = timezone.now()
         census_hits = 0
